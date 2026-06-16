@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="x.css">
+    <title>Quiz Application</title>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Quiz Application</h1>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="questionNumber"></div>
+        <div id="question"></div>
+
+        <div id="options"></div>
+
+        <div id="message"></div>
+
+        <div class="buttons">
+            <button id="prevBtn">Previous</button>
+            <button id="nextBtn">Next</button>
+        </div>
+
+        <button id="submitBtn">Submit Quiz</button>
+
+        <div id="result"></div>
+
+    </div>
+
+    <script>
+        const quizData = [
+{
+question:"Who has the best Public Speaking , Communication skills in the whole campus among students ?",
+options:["Roll 24040","Puspender Kumar","2024270732","All of the above"],
+answer:"All of the above"
+},
+{
+question:"What does HTML stand for?",
+options:[
+"Hyper Text Markup Language",
+"High Text Machine Language",
+"Hyper Tool Multi Language",
+"Hyper Transfer Markup Language"
+],
+answer:"Hyper Text Markup Language"
+},
+{
+question:"What is the correct CSS property for changing text color?",
+options:["font-style","color","background","text-align"],
+answer:"color"
+},
+{
+question:"Who is the best tutor in the campus?",
+options:["Harish Sir","Ashish Garthan","Narendra Sir","All of the above"],
+answer:"All of the above"
+},
+{
+question:"Whats the common reaction of your friend when you ask them to go for a trip ",
+options:["Paise nahi hai!!","Abba nahi manenge","Tabeyat thik nahi h","Statement Changes accourding to time"],
+answer:"Statement Changes accourding to time"
+},
+{
+question:"Which method selects an element by ID?",
+options:[
+"querySelector()",
+"getElementById()",
+"getElementsByClassName()",
+"findElement()"
+],
+answer:"getElementById()"
+},
+{
+question:"Which Finger is preferd to POP the tummy of Golgappa for the pleasure of our mouth ?",
+options:["First Finger after Thumb","Second after first","Third after second (Middle one)","Doesnt matter"],
+answer:"Doesnt matter"
+},
+{
+question:"Which tag creates a hyperlink?",
+options:["Starlink","a","link","airtel"],
+answer:"a"
+},
+{
+question:"Which property creates space inside an element?",
+options:["margin","padding","border","spacing"],
+answer:"padding"
+},
+{
+question:"What does DOM stand for?",
+options:[
+"Document Object Model",
+"Data Object Management",
+"Digital Ordinance Model",
+"Document Order Method"
+],
+answer:"Document Object Model"
+}
+];
+
+let currentQuestion = 0;
+
+let savedAnswers =
+JSON.parse(localStorage.getItem("quizAnswers"));
+
+let userAnswers;
+
+if(savedAnswers){
+    userAnswers = savedAnswers;
+}
+else{
+    userAnswers = new Array(quizData.length).fill("");
+}
+
+let startTime = new Date();
+
+const questionEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const questionNumberEl = document.getElementById("questionNumber");
+const resultEl = document.getElementById("result");
+const progressBar = document.getElementById("progressBar");
+const messageEl = document.getElementById("message");
+
+function loadQuestion() {
+
+    let q = quizData[currentQuestion];
+
+    questionNumberEl.innerHTML =
+    `Question ${currentQuestion + 1} of ${quizData.length}`;
+
+    questionEl.innerHTML = q.question;
+
+    optionsEl.innerHTML = "";
+
+    q.options.forEach(option => {
+
+        let checked = "";
+
+        if(userAnswers[currentQuestion] === option){
+            checked = "checked";
+        }
+
+        optionsEl.innerHTML += `
+        <div class="option">
+            <label>
+                <input type="radio"
+                       name="answer"
+                       value="${option}"
+                       ${checked}>
+                ${option}
+            </label>
+        </div>`;
+    });
+
+    updateProgress();
+}
+
+function updateProgress(){
+
+    let answered =
+    userAnswers.filter(ans => ans !== "").length;
+
+    let percent =
+    (answered / quizData.length) * 100;
+
+    progressBar.style.width = percent + "%";
+}
+
+optionsEl.addEventListener("change", (e) => {
+
+    if(e.target.name === "answer"){
+
+        userAnswers[currentQuestion] = e.target.value;
+
+        localStorage.setItem(
+            "quizAnswers",
+            JSON.stringify(userAnswers)
+        );
+
+        updateProgress();
+    }
+});
+
+document.getElementById("nextBtn")
+.addEventListener("click", () => {
+
+    if(currentQuestion < quizData.length - 1){
+        currentQuestion++;
+        loadQuestion();
+    }
+});
+
+document.getElementById("prevBtn")
+.addEventListener("click", () => {
+
+    if(currentQuestion > 0){
+        currentQuestion--;
+        loadQuestion();
+    }
+});
+
+document.getElementById("submitBtn")
+.addEventListener("click", () => {
+
+    if(userAnswers.includes("")){
+
+        messageEl.innerHTML =
+        "Please answer all questions before submitting.";
+
+        return;
+    }
+
+    messageEl.innerHTML = "";
+
+    localStorage.setItem("quizSubmitted", "true");
+
+    let correct = 0;
+
+    quizData.forEach((q, index) => {
+
+        if(userAnswers[index] === q.answer){
+            correct++;
+        }
+    });
+
+    let incorrect = quizData.length - correct;
+
+    let percentage =
+    ((correct / quizData.length) * 100).toFixed(2);
+
+    let endTime = new Date();
+
+    let seconds =
+    Math.floor((endTime - startTime) / 1000);
+
+    let status = "FAIL";
+
+    if(percentage >= 50){
+        status = "PASS";
+    }
+
+    resultEl.style.display = "block";
+
+    resultEl.innerHTML = `
+    <h2>Quiz Summary</h2>
+    <p>Total Questions: ${quizData.length}</p>
+    <p>Correct Answers: ${correct}</p>
+    <p>Incorrect Answers: ${incorrect}</p>
+    <p>Final Score: ${correct}/${quizData.length}</p>
+    <p>Score Percentage: ${percentage}%</p>
+    <p>Status: <b>${status}</b></p>
+    <p>Time Taken: ${seconds} Seconds</p>
+    <br>
+    <button onclick="restartQuiz()">Restart Quiz</button>
+    <hr>
+    <h3>Review Answers</h3>
+    `;
+
+    quizData.forEach((q, index) => {
+
+        let className = "incorrect";
+
+        if(userAnswers[index] === q.answer){
+            className = "correct";
+        }
+
+        resultEl.innerHTML += `
+        <div class="review-question ${className}">
+            <p><b>Q${index + 1}:</b> ${q.question}</p>
+            <p>Your Answer: ${userAnswers[index]}</p>
+            <p>Correct Answer: ${q.answer}</p>
+        </div>
+        `;
+    });
+
+    window.scrollTo(0, document.body.scrollHeight);
+});
+
+function restartQuiz(){
+
+    currentQuestion = 0;
+
+    userAnswers = new Array(quizData.length).fill("");
+
+    localStorage.removeItem("quizAnswers");
+    localStorage.removeItem("quizSubmitted");
+
+    startTime = new Date();
+
+    resultEl.style.display = "none";
+    resultEl.innerHTML = "";
+
+    messageEl.innerHTML = "";
+
+    progressBar.style.width = "0%";
+
+    loadQuestion();
+}
+
+loadQuestion();
+    </script>
+
+</body>
+
+</html>
